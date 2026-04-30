@@ -768,6 +768,17 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
       );
       extra += `[config] gateway.trustedProxies exit=${proxiesResult.code}\n`;
 
+      // Disable the device-pair plugin so the Control UI at /openclaw
+      // doesn't require browser-by-browser pairing approval. The wrapper
+      // already injects the gateway bearer token via its proxy and the
+      // /setup wizard is password-protected — pairing on top of that is
+      // pure friction without a security gain in this deployment model.
+      const disablePairResult = await runCmd(
+        OPENCLAW_NODE,
+        clawArgs(["plugins", "disable", "device-pair"]),
+      );
+      extra += `[config] plugins disable device-pair exit=${disablePairResult.code}\n`;
+
       // Claude Code subscription mode — register the local Claude CLI as the
       // Anthropic backend so OpenClaw uses ~/.claude/ creds instead of an
       // API key. We pre-flighted credentials above; this just wires it up.
