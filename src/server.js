@@ -1266,6 +1266,14 @@ app.use(async (req, res) => {
     }
   }
 
+  // Bare root hits the gateway's operator dashboard, which has its own
+  // pairing flow that doesn't honor allowInsecureAuth. For normal use you
+  // want the Control UI, not the admin dashboard — bounce there instead.
+  // Visit /dashboard explicitly if you really want the operator panel.
+  if (req.path === "/") {
+    return res.redirect("/openclaw");
+  }
+
   if (req.path === "/openclaw" && !req.query.token) {
     return res.redirect(`/openclaw?token=${OPENCLAW_GATEWAY_TOKEN}`);
   }
