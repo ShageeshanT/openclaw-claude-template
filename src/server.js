@@ -179,7 +179,12 @@ function sleep(ms) {
 }
 
 async function waitForGatewayReady(opts = {}) {
-  const timeoutMs = opts.timeoutMs ?? 60_000;
+  // First-boot timeout needs headroom because OpenClaw plugins (e.g. the
+  // bundled @openclaw/anthropic-provider in 2026.4.x) stage runtime deps on
+  // first launch — that pulls ~30 npm packages and can take 60-90 seconds
+  // before the gateway even starts listening on its port. A 60s budget here
+  // produced spurious "failed to become ready" errors on cold deploys.
+  const timeoutMs = opts.timeoutMs ?? 180_000;
   const start = Date.now();
   const endpoints = ["/openclaw", "/openclaw", "/", "/health"];
 
@@ -277,7 +282,7 @@ async function ensureGatewayRunning() {
     gatewayStarting = (async () => {
       await syncAllowedOrigins();
       await startGateway();
-      const ready = await waitForGatewayReady({ timeoutMs: 60_000 });
+      const ready = await waitForGatewayReady({ timeoutMs: 180_000 });
       if (!ready) {
         throw new Error("Gateway did not become ready in time");
       }
