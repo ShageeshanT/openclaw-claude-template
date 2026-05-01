@@ -41,6 +41,14 @@ ENV HOMEBREW_REPOSITORY="/home/linuxbrew/.linuxbrew/Homebrew"
 
 ENV PORT=8080
 ENV OPENCLAW_ENTRY=/usr/local/lib/node_modules/openclaw/dist/entry.js
+
+# Railway gives AAAA (IPv6) DNS records but blocks outbound IPv6 traffic.
+# Without this hint, Node's default getaddrinfo order tries IPv6 first, hangs
+# until timeout, and never falls back to IPv4 — which kills any plugin that
+# opens a WebSocket to a v6-only-DNS host (e.g. Baileys -> web.whatsapp.com,
+# manifesting as 408 Request Time-out before the WhatsApp QR is generated).
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
